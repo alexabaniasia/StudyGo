@@ -1,1 +1,1 @@
-
+Take full control of your learning with a flexible flashcard system designed for efficient content management. You can easily build your library by creating new decks from scratch or importing existing collections to get started immediately. When it is time to review, simply load your chosen deck to access your materials. Robust editing features allow you to maintain a clutter-free environment by deleting entire decks you no longer need or removing individual cards to keep your study data precise and relevant.
