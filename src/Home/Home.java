@@ -22,7 +22,7 @@ public class Home extends JFrame {
         SwingUtilities.invokeLater(Home::new);
     }
 
-    private Home() {
+    public Home() {
         super("StudyGo");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setSize(1280, 720);
