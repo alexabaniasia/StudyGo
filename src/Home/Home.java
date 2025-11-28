@@ -7,10 +7,7 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -75,6 +72,13 @@ public class Home extends JFrame {
         addDecks(homePanel);
 
         setContentPane(homePanel);
+
+        homePanel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                homePanel.requestFocusInWindow();
+            }
+        });
     }
 
     private void addDecks(JPanel homePanel) {
