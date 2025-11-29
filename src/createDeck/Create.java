@@ -51,18 +51,18 @@ public class Create extends JFrame {
         layeredPane.setBounds(0, 0, 1280, 750);
         add(layeredPane);
 
-        //  MAIN DASHBOARD
+        // Main Dashboard
         mainDash = new MainDashboard();
         mainDash.setBounds(36, 43, 1193, 633);
         layeredPane.add(mainDash, Integer.valueOf(0));
 
-        // DISCARD POPUP
+        // DISCARD BUTTON POPUP
         discardView = new DiscardPopup();
         discardView.setBounds(0, 0, 1280, 750);
         discardView.setVisible(false);
         layeredPane.add(discardView, Integer.valueOf(1));
 
-        //  Save POPUP
+        // SAVE BUTTON POPUP
         successView = new SuccessPopup();
         successView.setBounds(0, 0, 1280, 750);
         successView.setVisible(false);
@@ -173,15 +173,15 @@ public class Create extends JFrame {
         public boolean isEmpty() { return front.trim().isEmpty() && back.trim().isEmpty(); }
     }
 
-    // =========================================================================
-    // CUSTOM COMPONENT: SHADOW BUTTON (Supports Icons)
-    // =========================================================================
+
+    //CUSTOM COMPONENT: SHADOW BUTTON (Supports Icons)
+
     class ShadowButton extends JButton {
         private Color bgColor;
         private Color shadowColor;
         private boolean isPressed = false;
 
-        // 0=None, 1=Trash, 2=Save
+
         private int iconType = 0;
 
         public ShadowButton(String text, int x, int y, int w, int h, Color bg, int iconType) {
