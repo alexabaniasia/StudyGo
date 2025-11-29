@@ -22,12 +22,9 @@ public class Create extends JFrame {
     private Font fontRegular;
     private Font fontBold;
 
-    private final String PATH_FONT_REGULAR = "/resources/fonts/Gabarito-Regular.ttf";
     private final String PATH_FONT_BOLD    = "/resources/fonts/Gabarito-Bold.ttf";
     private final String IMG_PATH_PREFIX   = "/createRes/";
 
-    // --- GUI LAYERS ---
-    private final JLayeredPane layeredPane;
     private final MainDashboard mainDash;
     private final DiscardPopup discardView;
     private final SuccessPopup successView;
@@ -49,7 +46,8 @@ public class Create extends JFrame {
         getContentPane().setBackground(new Color(230, 240, 245));
 
         // LAYERED PANE SETUP
-        layeredPane = new JLayeredPane();
+        // --- GUI LAYERS ---
+        JLayeredPane layeredPane = new JLayeredPane();
         layeredPane.setBounds(0, 0, 1280, 750);
         add(layeredPane);
 
@@ -114,6 +112,7 @@ public class Create extends JFrame {
     private void loadFonts() {
         try {
             GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+            String PATH_FONT_REGULAR = "/resources/fonts/Gabarito-Regular.ttf";
             InputStream isReg = getClass().getResourceAsStream(PATH_FONT_REGULAR);
             if (isReg != null) {
                 fontRegular = Font.createFont(Font.TRUETYPE_FONT, isReg).deriveFont(16f);
@@ -134,8 +133,8 @@ public class Create extends JFrame {
         }
     }
 
-    private Image loadImageGlobal(String filename) {
-        URL imgURL = getClass().getResource(IMG_PATH_PREFIX + filename);
+    private Image loadImageGlobal() {
+        URL imgURL = getClass().getResource(IMG_PATH_PREFIX + "recent-panel.png");
         if (imgURL != null) {
             return new ImageIcon(imgURL).getImage();
         }
@@ -285,9 +284,8 @@ public class Create extends JFrame {
 
     // Custom Text Field
     class RoundedTextField extends JTextField {
-        private String placeholder;
-        private int arcSize = 15;
-        private int maxChars;
+        private final String placeholder;
+        private final int maxChars;
 
         public RoundedTextField(String ph, int x, int y, int w, int h, int limit) {
             this.placeholder = ph;
@@ -334,6 +332,7 @@ public class Create extends JFrame {
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
             g2.setColor(new Color(250, 250, 250));
+            int arcSize = 15;
             g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, arcSize, arcSize);
 
             g2.setColor(new Color(200, 200, 200));
@@ -356,13 +355,14 @@ public class Create extends JFrame {
 
     // Main Dashboard
     class MainDashboard extends JPanel {
-        private RoundedTextField titleField, subjectField;
         private JTextArea frontArea, backArea;
-        private JLabel counterLabel;
+        private final JLabel counterLabel;
 
-        private ShadowButton btnClear, btnDiscard, btnSave;
+        private final ShadowButton btnClear;
+        private final ShadowButton btnDiscard;
+        private final ShadowButton btnSave;
 
-        private Image panelBg;
+        private final Image panelBg;
         private final Color PANEL_COLOR = new Color(0xFF, 0xFD, 0xFA);
 
         private boolean isDiscardMode = false;
@@ -371,23 +371,23 @@ public class Create extends JFrame {
             setLayout(null);
             setOpaque(false);
 
-            panelBg = loadImageGlobal("recent-panel.png");
+            panelBg = loadImageGlobal();
 
             // Inputs
             add(createLabel("DECK TITLE", 50, 50));
-            titleField = new RoundedTextField("Deck Title REQUIRED*", 50, 80, 499, 50, 40);
+            RoundedTextField titleField = new RoundedTextField("Deck Title REQUIRED*", 50, 80, 499, 50, 40);
             add(titleField);
 
             add(createLabel("SUBJECT (OPTIONAL)", 580, 50));
-            subjectField = new RoundedTextField("", 580, 80, 499, 50, 20);
+            RoundedTextField subjectField = new RoundedTextField("", 580, 80, 499, 50, 20);
             add(subjectField);
 
             // Flashcards
-            add(createCardPanel("Front", 45, 150, 510, 368, true));
-            add(createCardPanel("Back", 575, 150, 510, 368, false));
+            add(createCardPanel("Front", 45, true));
+            add(createCardPanel("Back", 575, false));
 
             // Plus Button
-            JButton btnAdd = createImageButton("plus.png", 1100, 308, 50, 50);
+            JButton btnAdd = createImageButton();
             if (btnAdd == null) {
                 btnAdd = new JButton("+");
                 btnAdd.setBounds(1100, 308, 50, 50);
@@ -512,13 +512,13 @@ public class Create extends JFrame {
             return new ShadowButton(alt, x, y, 60, 45, new Color(144, 238, 144), 0);
         }
 
-        private JButton createImageButton(String name, int x, int y, int w, int h) {
-            URL url = getClass().getResource(IMG_PATH_PREFIX + name);
+        private JButton createImageButton() {
+            URL url = getClass().getResource(IMG_PATH_PREFIX + "plus.png");
             if (url != null) {
                 Image img = new ImageIcon(url).getImage();
-                ImageIcon icon = new ImageIcon(img.getScaledInstance(w, h, Image.SCALE_SMOOTH));
+                ImageIcon icon = new ImageIcon(img.getScaledInstance(50, 50, Image.SCALE_SMOOTH));
                 JButton b = new JButton(icon);
-                b.setBounds(x, y, w, h);
+                b.setBounds(1100, 308, 50, 50);
                 b.setContentAreaFilled(false);
                 b.setBorderPainted(false);
                 b.setFocusPainted(false);
@@ -536,7 +536,7 @@ public class Create extends JFrame {
             return l;
         }
 
-        private JPanel createCardPanel(String title, int x, int y, int w, int h, boolean isFront) {
+        private JPanel createCardPanel(String title, int x, boolean isFront) {
             JPanel p = new JPanel(null) {
                 @Override protected void paintComponent(Graphics g) {
                     Graphics2D g2 = (Graphics2D) g;
@@ -546,29 +546,29 @@ public class Create extends JFrame {
                         int arc = 0;
 
                         g2.setColor(new Color(0, 0, 0, 30));
-                        g2.fillRoundRect(5, 8, w-10, h-10, arc, arc);
+                        g2.fillRoundRect(5, 8, 510 -10, 368 -10, arc, arc);
 
                         g2.setColor(Color.WHITE);
-                        g2.fillRoundRect(10, 0, w-10, h-10, arc, arc);
+                        g2.fillRoundRect(10, 0, 510 -10, 368 -10, arc, arc);
                     }
                     else {
                         int arc = 45;
                         int shadowOffset = 8;
 
                         g2.setColor(new Color(160, 160, 160));
-                        g2.fillRoundRect(5, 5+shadowOffset, w-10, h-10-shadowOffset, arc, arc);
+                        g2.fillRoundRect(5, 5+shadowOffset, 510 -10, 368 -10-shadowOffset, arc, arc);
 
                         g2.setColor(Color.WHITE);
-                        g2.fillRoundRect(5, 5, w-10, h-10-shadowOffset, arc, arc);
+                        g2.fillRoundRect(5, 5, 510 -10, 368 -10-shadowOffset, arc, arc);
 
                         g2.setColor(new Color(200, 200, 200));
                         g2.setStroke(new BasicStroke(3));
-                        g2.drawRoundRect(5, 5, w-10, h-10-shadowOffset, arc, arc);
+                        g2.drawRoundRect(5, 5, 510 -10, 368 -10-shadowOffset, arc, arc);
                     }
                 }
             };
             p.setOpaque(false);
-            p.setBounds(x, y, w, h);
+            p.setBounds(x, 150, 510, 368);
 
             JLabel l = new JLabel(title);
             l.setFont(fontBold.deriveFont(20f));
@@ -581,7 +581,7 @@ public class Create extends JFrame {
             ta.setFont(fontRegular.deriveFont(22f));
             ta.setLineWrap(true);
             ta.setWrapStyleWord(true);
-            ta.setBounds(30, 75, w-70, h-100);
+            ta.setBounds(30, 75, 510 -70, 368 -100);
 
             if(isFront) frontArea = ta; else backArea = ta;
             p.add(ta);
@@ -597,6 +597,28 @@ public class Create extends JFrame {
             setOpaque(false);
             addMouseListener(new MouseAdapter() {});
 
+            JPanel modal = getJPanel();
+            add(modal);
+
+            JLabel lbl = new JLabel("<html><center>Are you sure you want to discard<br>flashcards?</center></html>");
+            lbl.setFont(fontBold.deriveFont(20f));
+            lbl.setForeground(Color.BLACK);
+            lbl.setHorizontalAlignment(SwingConstants.CENTER);
+            lbl.setBounds(20, 30, 380, 80);
+            modal.add(lbl);
+
+            ShadowButton btnYes = new ShadowButton("YES", 30, 140, 170, 50, new Color(230, 130, 130), 0);
+            btnYes.setSmooth(true);
+            btnYes.addActionListener(e -> performDiscard());
+            modal.add(btnYes);
+
+            ShadowButton btnNo = new ShadowButton("NO", 215, 140, 170, 50, new Color(144, 238, 144), 0);
+            btnNo.setSmooth(true);
+            btnNo.addActionListener(e -> hideDiscardScreen());
+            modal.add(btnNo);
+        }
+
+        private JPanel getJPanel() {
             JPanel modal = new JPanel(null) {
                 @Override
                 protected void paintComponent(Graphics g) {
@@ -621,24 +643,7 @@ public class Create extends JFrame {
 
             modal.setBounds(430, 250, 420, 250);
             modal.setOpaque(false);
-            add(modal);
-
-            JLabel lbl = new JLabel("<html><center>Are you sure you want to discard<br>flashcards?</center></html>");
-            lbl.setFont(fontBold.deriveFont(20f));
-            lbl.setForeground(Color.BLACK);
-            lbl.setHorizontalAlignment(SwingConstants.CENTER);
-            lbl.setBounds(20, 30, 380, 80);
-            modal.add(lbl);
-
-            ShadowButton btnYes = new ShadowButton("YES", 30, 140, 170, 50, new Color(230, 130, 130), 0);
-            btnYes.setSmooth(true);
-            btnYes.addActionListener(e -> performDiscard());
-            modal.add(btnYes);
-
-            ShadowButton btnNo = new ShadowButton("NO", 215, 140, 170, 50, new Color(144, 238, 144), 0);
-            btnNo.setSmooth(true);
-            btnNo.addActionListener(e -> hideDiscardScreen());
-            modal.add(btnNo);
+            return modal;
         }
 
         @Override
