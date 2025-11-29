@@ -253,7 +253,7 @@ public class Create extends JFrame {
 
             g2.setColor(getForeground());
 
-            // 4. Draw Icon
+            //  Draw Icon
             if (iconType == 1) { // Trash Icon
                 g2.setStroke(new BasicStroke(2));
                 // Lid
