@@ -7,6 +7,8 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.*;
@@ -26,6 +28,7 @@ public class Home extends JFrame {
     private ImageIcon yellowDeck, blueDeck, brightYellowDeck, greenDeck, pinkDeck, dOptions;
     ArrayList<Deck> recentDecks;
     ArrayList<Card> recentCards;
+    ArrayList<Deck> resultDeck;
     int deckX = 0, deckY = 0;
     int opX = 132, opY = 20;
     int progX = 19, progY = 152;
@@ -42,6 +45,7 @@ public class Home extends JFrame {
         setLocationRelativeTo(null);
         setResizable(false);
         recentDecks = new ArrayList<>();
+        resultDeck = new ArrayList<>();
 
         // for TESTING only
         recentDecks.add(new Deck("Hello wo231rld", 20,12,"yellow"));
@@ -53,6 +57,8 @@ public class Home extends JFrame {
 
         addGUI();
         setVisible(true);
+
+        SwingUtilities.invokeLater(() -> homePanel.requestFocusInWindow());
     }
 
     private void addGUI() {
@@ -80,9 +86,13 @@ public class Home extends JFrame {
         homePanel.setPreferredSize(new Dimension(getWidth(), getHeight()));
 
         // add GUI components to panel
-        addButtons(homePanel);
-        addSearchBar(homePanel);
-        addDecks(homePanel);
+        addButtons();
+        addSearchBar();
+        addDecks(recentDecks);
+
+        deckContainer.setBounds(105,220,1055,407);
+        deckContainer.setOpaque(false);
+        homePanel.add(deckContainer);
 
         setContentPane(homePanel);
 
@@ -94,7 +104,10 @@ public class Home extends JFrame {
         });
     }
 
-    private void addDecks(JPanel homePanel) {
+    private void addDecks(ArrayList<Deck> decks) {
+        deckContainer.removeAll();
+        resetPosition();
+
         yellowDeck = loadImage("/resources/home/yellow-card.png");
         blueDeck = loadImage("/resources/home/blue-card.png");
         brightYellowDeck = loadImage("/resources/home/brightyellow-card.png");
@@ -103,11 +116,10 @@ public class Home extends JFrame {
 
         dOptions = loadImage("/resources/home/options.png");
 
-        deckContainer.setBounds(105,220,1055,407);
-        deckContainer.setOpaque(false);
-
         // display deckCont with details
-        for(Deck d : recentDecks) {
+        for(Deck d : decks) {
+            if(decks.size() > 9) continue;
+
             JLabel deckCont;
             switch (d.getColor()) {
                 case "blue" -> deckCont = new JLabel(blueDeck);
@@ -145,6 +157,16 @@ public class Home extends JFrame {
                     deleteItem.setBorderPainted(false);
                     deleteItem.setBorder(new EmptyBorder(5, 5, 5, 5));
                     optionsMenu.add(deleteItem);
+
+                    deleteItem.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            decks.remove(d);
+                            addDecks(decks);
+                            deckContainer.revalidate();
+                            deckContainer.repaint();
+                        }
+                    });
 
                     optionsMenu.show(deckOptions,deckOptions.getWidth()+10,0);
                 }
@@ -204,12 +226,12 @@ public class Home extends JFrame {
             }
 
         }
-        homePanel.add(deckContainer);
-        homePanel.revalidate();
-        homePanel.repaint();
+
+        deckContainer.revalidate();
+        deckContainer.repaint();
     }
 
-    private void addSearchBar(JPanel panel) {
+    private void addSearchBar() {
         ImageIcon sb = loadImage("/resources/home/search.png");
 
         JLabel searchBarImage = new JLabel(sb);
@@ -242,28 +264,73 @@ public class Home extends JFrame {
             }
         });
 
-        panel.add(searchBar);
-        panel.add(searchBarImage);
+        searchBar.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                searchDeck();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                searchDeck();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                searchDeck();
+            }
+
+            private void searchDeck() {
+                String searchTxt = searchBar.getText().toLowerCase().trim();
+                if(searchBar.getForeground().equals(new Color(153,153,153))) {
+                    searchTxt = "";
+                }
+                updateResult(searchTxt);
+            }
+        });
+
+        homePanel.add(searchBar);
+        homePanel.add(searchBarImage);
     }
 
-    private void addButtons(JPanel panel) {
+    private void updateResult(String searchTxt) {
+        resultDeck.clear();
+
+        if(searchTxt.isEmpty()) {
+            addDecks(recentDecks);
+        }
+        // find deck
+        else {
+            for (Deck d : recentDecks) {
+                if (d.getTitle().toLowerCase().contains(searchTxt)) {
+                    resultDeck.add(d);
+                }
+            }
+            addDecks(resultDeck);
+        }
+
+        deckContainer.revalidate();
+        deckContainer.repaint();
+    }
+
+    private void addButtons() {
         ImageIcon cd = loadImage("/resources/home/create-deck-btn.png");
         createDeck = new JButton(cd);
         createDeck.setBounds(840, 47, cd.getIconWidth(), cd.getIconHeight());
         styleButton(createDeck);
-        panel.add(createDeck);
+        homePanel.add(createDeck);
 
         ImageIcon ld = loadImage("/resources/home/load-deck-btn.png");
         loadDeck = new JButton(ld);
         loadDeck.setBounds(1042, 47, ld.getIconWidth(), ld.getIconHeight());
         styleButton(loadDeck);
-        panel.add(loadDeck);
+        homePanel.add(loadDeck);
 
         // action listeners
         createDeck.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                openPopupMenu(panel);
+                openPopupMenu();
             }
         });
 
@@ -275,7 +342,7 @@ public class Home extends JFrame {
         });
     }
 
-    private void openPopupMenu(JPanel panel) {
+    private void openPopupMenu() {
         createDeckMenu = new JPopupMenu();
         createDeckMenu.setPopupSize(182,80);
         createDeckMenu.setFont(loadCustomFont("medium",22));
@@ -298,14 +365,14 @@ public class Home extends JFrame {
         importFileItem.setBorder(new EmptyBorder(10, 10, 10, 10));
         createDeckMenu.add(importFileItem);
 
-        importFileItem.addMouseListener(new MouseAdapter() {
+        importFileItem.addActionListener(new ActionListener() {
             @Override
-            public void mousePressed(MouseEvent e) {
+            public void actionPerformed(ActionEvent e) {
                 importFile();
             }
         });
 
-        createDeckMenu.show(panel,840,109);
+        createDeckMenu.show(homePanel,840,109);
     }
 
     private void importFile() {
@@ -326,13 +393,13 @@ public class Home extends JFrame {
         }
     }
 
-    private void successAddDeckPanel(JPanel panel) {
+    private void successAddDeckPanel() {
         ImageIcon successBg = loadImage("/resources/home/success-opening-file.png");
         ImageIcon closeBtn = loadImage("/resources/home/close-btn.png");
         ImageIcon greenOKBtn = loadImage("/resources/home/green-ok-btn.png");
 
         JPanel successPanel = new JPanel(null);
-        successPanel.setBounds(0,0,panel.getWidth(),panel.getHeight());
+        successPanel.setBounds(0,0,homePanel.getWidth(),homePanel.getHeight());
 
         JButton closeDialog = new JButton(closeBtn);
         closeDialog.setBounds(750,262,closeBtn.getIconWidth()+2,closeBtn.getIconHeight());
@@ -342,9 +409,9 @@ public class Home extends JFrame {
         closeDialog.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                panel.remove(successPanel);
-                panel.revalidate();
-                panel.repaint();
+                homePanel.remove(successPanel);
+                homePanel.revalidate();
+                homePanel.repaint();
             }
         });
 
@@ -356,30 +423,30 @@ public class Home extends JFrame {
         okDialog.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                panel.remove(successPanel);
-                panel.revalidate();
-                panel.repaint();
+                homePanel.remove(successPanel);
+                homePanel.revalidate();
+                homePanel.repaint();
             }
         });
 
         JLabel successDialog = new JLabel(successBg);
-        successDialog.setBounds(0,0,panel.getWidth(),panel.getHeight());
+        successDialog.setBounds(0,0,homePanel.getWidth(),homePanel.getHeight());
         successPanel.add(successDialog);
         successPanel.setOpaque(false);
 
-        panel.add(successPanel);
-        panel.setComponentZOrder(successPanel,0);
-        panel.revalidate();
-        panel.repaint();
+        homePanel.add(successPanel);
+        homePanel.setComponentZOrder(successPanel,0);
+        homePanel.revalidate();
+        homePanel.repaint();
     }
 
-    private void errorFilePanel(JPanel panel) {
+    private void errorFilePanel() {
         ImageIcon errorBg = loadImage("/resources/home/error-opening-file.png");
         ImageIcon closeBtn = loadImage("/resources/home/close-btn.png");
         ImageIcon grayOKBtn = loadImage("/resources/home/gray-ok-btn.png");
 
         JPanel errorPanel = new JPanel(null);
-        errorPanel.setBounds(0,0,panel.getWidth(),panel.getHeight());
+        errorPanel.setBounds(0,0,homePanel.getWidth(),homePanel.getHeight());
 
         JButton closeDialog = new JButton(closeBtn);
         closeDialog.setBounds(750,262,closeBtn.getIconWidth()+2,closeBtn.getIconHeight());
@@ -389,9 +456,9 @@ public class Home extends JFrame {
         closeDialog.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                panel.remove(errorPanel);
-                panel.revalidate();
-                panel.repaint();
+                homePanel.remove(errorPanel);
+                homePanel.revalidate();
+                homePanel.repaint();
             }
         });
 
@@ -403,21 +470,21 @@ public class Home extends JFrame {
         okDialog.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                panel.remove(errorPanel);
-                panel.revalidate();
-                panel.repaint();
+                homePanel.remove(errorPanel);
+                homePanel.revalidate();
+                homePanel.repaint();
             }
         });
 
         JLabel errorDialog = new JLabel(errorBg);
-        errorDialog.setBounds(0,0,panel.getWidth(),panel.getHeight());
+        errorDialog.setBounds(0,0,homePanel.getWidth(),homePanel.getHeight());
         errorPanel.add(errorDialog);
         errorPanel.setOpaque(false);
 
-        panel.add(errorPanel);
-        panel.setComponentZOrder(errorPanel,0);
-        panel.revalidate();
-        panel.repaint();
+        homePanel.add(errorPanel);
+        homePanel.setComponentZOrder(errorPanel,0);
+        homePanel.revalidate();
+        homePanel.repaint();
     }
 
     private void loadDeckFromFile(String path) {
@@ -443,25 +510,25 @@ public class Home extends JFrame {
                 recentCards.add(new Card(qa[0], qa[1]));
             }
 
-            // reset deck position
-            deckX = 0;
-            deckY = 0;
-            opX = 132;
-            opY = 20;
-            progX = 19;
-            progY = 152;
-            colCtr = 0;
-            rowCtr = 0;
+            addDecks(recentDecks);
 
-            deckContainer.removeAll();
-            addDecks(homePanel);
-
-            successAddDeckPanel(homePanel);
+            successAddDeckPanel();
             br.close();
         } catch (IOException | RuntimeException e) {
-            errorFilePanel(homePanel);
+            errorFilePanel();
             throw new RuntimeException(e);
         }
+    }
+
+    private void resetPosition() {
+        deckX = 0;
+        deckY = 0;
+        opX = 132;
+        opY = 20;
+        progX = 19;
+        progY = 152;
+        colCtr = 0;
+        rowCtr = 0;
     }
 
     private void styleButton(JButton btn) {
