@@ -6,7 +6,6 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
-import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.*;
@@ -22,7 +21,9 @@ public class Home extends JFrame {
     private JPanel homePanel;
     private JPopupMenu createDeckMenu;
     private JPopupMenu optionsMenu;
-    ArrayList<Deck> decks;
+    private JPanel deckContainer = new JPanel(null);
+    private ImageIcon yellowDeck, blueDeck, brightYellowDeck, greenDeck, pinkDeck, dOptions;
+    ArrayList<Deck> recentDecks;
     int deckX = 0, deckY = 0;
     int opX = 132, opY = 20;
     int progX = 19, progY = 152;
@@ -38,7 +39,15 @@ public class Home extends JFrame {
         setSize(1280, 720);
         setLocationRelativeTo(null);
         setResizable(false);
-        decks = new ArrayList<>();
+        recentDecks = new ArrayList<>();
+
+        // for TESTING only
+        recentDecks.add(new Deck("Hello wo231rld", 20,12,"yellow"));
+        recentDecks.add(new Deck("Hello gggg world", 45,321,"pink"));
+        recentDecks.add(new Deck("Hell3e wdcc world", 20,122,"yellow"));
+//        decks.add(new Deck("Hello world", 20,12,"green"));
+//        decks.add(new Deck("Hello jfjdfb world", 332,5,"yellow"));
+//        decks.add(new Deck("Hfgcco world", 123,123,"blue"));
 
         addGUI();
         setVisible(true);
@@ -84,28 +93,20 @@ public class Home extends JFrame {
     }
 
     private void addDecks(JPanel homePanel) {
-        ImageIcon yellowDeck = loadImage("/resources/home/yellow-card.png");
-        ImageIcon blueDeck = loadImage("/resources/home/blue-card.png");
-        ImageIcon brightYellowDeck = loadImage("/resources/home/brightyellow-card.png");
-        ImageIcon greenDeck = loadImage("/resources/home/green-card.png");
-        ImageIcon pinkDeck = loadImage("/resources/home/pink-card.png");
+        System.out.println("Add deck called");
+        yellowDeck = loadImage("/resources/home/yellow-card.png");
+        blueDeck = loadImage("/resources/home/blue-card.png");
+        brightYellowDeck = loadImage("/resources/home/brightyellow-card.png");
+        greenDeck = loadImage("/resources/home/green-card.png");
+        pinkDeck = loadImage("/resources/home/pink-card.png");
 
-        ImageIcon dOptions = loadImage("/resources/home/options.png");
+        dOptions = loadImage("/resources/home/options.png");
 
-        JPanel deckContainer = new JPanel(null);
         deckContainer.setBounds(105,220,1055,407);
         deckContainer.setOpaque(false);
 
-        // for TESTING only
-        decks.add(new Deck("Hello wo231rld", 20,12,"yellow"));
-        decks.add(new Deck("Hello gggg world", 45,321,"pink"));
-        decks.add(new Deck("Hell3e wdcc world", 20,122,"yellow"));
-        decks.add(new Deck("Hello world", 20,12,"green"));
-        decks.add(new Deck("Hello jfjdfb world", 332,5,"yellow"));
-        decks.add(new Deck("Hfgcco world", 123,123,"blue"));
-
         // display deckCont with details
-        for(Deck d : decks) {
+        for(Deck d : recentDecks) {
             JLabel deckCont;
             switch (d.getColor()) {
                 case "blue" -> deckCont = new JLabel(blueDeck);
@@ -161,7 +162,6 @@ public class Home extends JFrame {
             // deck container layout
             deckCont.setLayout(null);
             deckCont.setBounds(deckX, deckY, yellowDeck.getIconWidth(), yellowDeck.getIconHeight());
-            deckContainer.add(deckCont);
 
             JLabel deckTitle = new JLabel();
             JLabel deckSize = new JLabel(String.valueOf(d.getSize()));
@@ -182,6 +182,7 @@ public class Home extends JFrame {
 
             deckCont.add(deckTitle);
             deckCont.add(deckSize);
+            deckContainer.add(deckCont);
 
             // add next deckCont
             deckX += 221;
@@ -202,9 +203,9 @@ public class Home extends JFrame {
             }
 
         }
-
-
         homePanel.add(deckContainer);
+        homePanel.revalidate();
+        homePanel.repaint();
     }
 
     private void addSearchBar(JPanel panel) {
@@ -360,9 +361,9 @@ public class Home extends JFrame {
             }
         });
 
-        JLabel errorDialog = new JLabel(successBg);
-        errorDialog.setBounds(0,0,panel.getWidth(),panel.getHeight());
-        successPanel.add(errorDialog);
+        JLabel successDialog = new JLabel(successBg);
+        successDialog.setBounds(0,0,panel.getWidth(),panel.getHeight());
+        successPanel.add(successDialog);
         successPanel.setOpaque(false);
 
         panel.add(successPanel);
@@ -427,10 +428,27 @@ public class Home extends JFrame {
             // TODO: set subject of deck
             while((line = br.readLine()) != null) {
                 String[] lines = line.split(",");
-                if(Integer.parseInt(lines[1]) > Integer.parseInt(lines[2]))
+                if(Integer.parseInt(lines[2]) > Integer.parseInt(lines[1]))
                     throw new IllegalArgumentException("Size must be greater than or equal to the cards accessed");
-                decks.add(new Deck(lines[0], Integer.parseInt(lines[1]), Integer.parseInt(lines[2]),lines[3]));
+
+                Deck d = new Deck(lines[0], Integer.parseInt(lines[1]), Integer.parseInt(lines[2]),lines[3]);
+
+                recentDecks.addFirst(d);
+
             }
+
+            // reset deck position
+            deckX = 0;
+            deckY = 0;
+            opX = 132;
+            opY = 20;
+            progX = 19;
+            progY = 152;
+            colCtr = 0;
+            rowCtr = 0;
+
+            deckContainer.removeAll();
+            addDecks(homePanel);
 
             successAddDeckPanel(homePanel);
             br.close();
